@@ -4,6 +4,12 @@
 
 Unlock the official Simplified Chinese UI hidden inside Claude Desktop for macOS. One script, Anthropic's own 34,443-entry dictionary, no Node.js or dev tools required.
 
+## 📸 效果预览
+
+| 设置界面 | 语言选择器 |
+|---|---|
+| ![设置界面（简体中文）](screenshots/settings-zh.png) | ![语言选择器（简体中文）](screenshots/language-picker-zh.png) |
+
 ## ✨ 特性
 
 - **官方词典**：使用 Anthropic 官方发布的 34,443 条界面翻译（非社区机翻）
