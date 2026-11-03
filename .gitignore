@@ -1,0 +1,5 @@
+.DS_Store
+*.zip
+claude-cn-patch*.zip
+*.log
+__pycache__/

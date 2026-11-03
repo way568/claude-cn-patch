@@ -1,0 +1,38 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash 语法检查（C 与 UTF-8 双 locale）
+        run: |
+          LC_ALL=C bash -n patch.sh
+          LC_ALL=en_US.UTF-8 bash -n patch.sh
+
+      - name: 变量后紧跟全角标点扫描（历史坑：UTF-8 locale 下 bash 吞标点进变量名）
+        run: |
+          if grep -nP '\$[A-Za-z_][A-Za-z0-9_]*(?=[^\x00-\x7F])' patch.sh; then
+            echo "::error::发现变量后紧跟全角标点，请改为 \${VAR} 花括号写法"; exit 1
+          fi
+
+      - name: 词典完整性与锚点在位检查
+        run: |
+          python3 - <<'EOF'
+          import json
+          d = json.load(open('catalogs/zh-Hans-web.json'))
+          assert len(d) >= 1000, f'基础词典异常: {len(d)}'
+          print('基础词典词条:', len(d))
+          d2 = json.load(open('catalogs/zh-Hans-dynamic.json'))
+          assert len(d2) >= 10, f'动态词典异常: {len(d2)}'
+          print('动态词典词条:', len(d2))
+          s = open('patch.sh', encoding='utf-8').read()
+          for anchor in ('t&&e.push(t.slice(1))}return e}',
+                         'dataset.i18nReleased;return e?e.split(","):[]}',
+                         'let r=v(t),i;'):
+              assert anchor in s, f'锚点定义缺失: {anchor[:30]}'
+          print('锚点定义在位')
+          EOF
