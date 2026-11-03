@@ -1,82 +1,82 @@
 # claude-cn-patch
 
-> 解锁 Claude Desktop（macOS）**官方预置的简体中文界面** —— 一条命令，官方 34,443 词条词典，零依赖。
+> Unlock the official Simplified Chinese UI hidden inside Claude Desktop for macOS — one script, Anthropic's own 34,443-entry dictionary, no Node.js or dev tools required.
 
-Unlock the official Simplified Chinese UI hidden inside Claude Desktop for macOS. One script, Anthropic's own 34,443-entry dictionary, no Node.js or dev tools required.
+**English** · [简体中文](./README.zh-CN.md)
 
-## 📸 效果预览
+## 📸 Preview
 
-| 设置界面 | 语言选择器 |
+| Settings | Language picker |
 |---|---|
-| ![设置界面（简体中文）](screenshots/settings-zh.png) | ![语言选择器（简体中文）](screenshots/language-picker-zh.png) |
+| ![Settings in Simplified Chinese](screenshots/settings-zh.png) | ![Language picker with Chinese entry](screenshots/language-picker-zh.png) |
 
-## ✨ 特性
+## ✨ Features
 
-- **官方词典**：使用 Anthropic 官方发布的 34,443 条界面翻译（非社区机翻）
-- **零依赖**：仅用 macOS 自带工具（bash + python3 + codesign）
-- **不动原 App**：所有修改只发生在 `Claude-CN` 副本上，原版毫发无损，删副本即回滚
-- **防呆设计**：运行中检测、磁盘检查、打包后逐文件哈希自检（失败发生在替换前）、锚点漂移逐项提示
+- **Official dictionary**: Anthropic's own 34,443 UI translations (not community machine translation)
+- **Zero dependencies**: only macOS built-ins (bash + python3 + codesign)
+- **Original app untouched**: all changes happen in a `Claude-CN` copy only — delete the copy to roll back
+- **Fool-proof by design**: running-instance detection, disk-space check, per-file hash self-verification before replacing anything, drift-aware anchor patching
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/<you>/claude-cn-patch.git
+git clone https://github.com/way568/claude-cn-patch.git
 cd claude-cn-patch
 bash patch.sh
 ```
 
-1. 脚本自动创建 `/Applications/Claude-CN.app` 副本并打补丁（约 2 分钟）
-2. 完全退出原 Claude（菜单栏图标 → Quit Claude，⚠️ 只关窗口不算退出）
-3. 打开 Claude-CN → 语言菜单选「中文（简体）」一次 → 之后每次启动都是中文
+1. The script creates `/Applications/Claude-CN.app` and patches it (~2 min)
+2. Fully quit the original Claude (menubar icon → Quit Claude — ⚠️ closing the window is not enough)
+3. Open Claude-CN → choose 中文（简体） in the language menu once → Chinese from then on
 
-自定义路径：`bash patch.sh /目标/路径/MyClaude.app`，原 App 位置可用 `SRC_APP=/路径/Claude.app bash patch.sh` 覆盖。
+Custom paths: `bash patch.sh /path/to/MyClaude.app`; override the source app with `SRC_APP=/path/to/Claude.app bash patch.sh`.
 
-## 📋 兼容性
+## 📋 Compatibility
 
-| 项目 | 状态 |
+| Item | Status |
 |---|---|
-| 已验证 App 版本 | 4.4212.0（2026-10-30 构建，arm64） |
-| 系统 | macOS（Apple Silicon；Intel 理论可行未验证） |
-| 其他版本 | 锚点按内容全局搜索，小版本差异可自动适配；差异过大时脚本会逐项提示「锚点漂移」而不会损坏 App |
+| Verified app version | 4.4212.0 (2026-10-30 build, arm64) |
+| OS | macOS (Apple Silicon; Intel untested) |
+| Other versions | Anchors are located by content search, so minor version drift adapts automatically; on larger drift the script reports each skipped step without damaging the app |
 
-## 🔧 工作原理
+## 🔧 How It Works
 
-Anthropic 已把整套中文界面造好（词典部署在官方 CDN、多语言机制内置于 App），只是客户端的语言放行名单没有 zh-Hans。本补丁只做四件小事，全部针对副本的 `ion-dist.asar`：
+Anthropic already ships the whole Chinese UI machinery — the dictionary lives on their CDN and the i18n pipeline is built into the app — but `zh-Hans` is not on the client-side release list. This patch makes four small changes to the copy's `ion-dist.asar`:
 
-1. 把 zh-Hans 追加进 App 代码里的两份语言清单（词典目录 / 选择器列表）
-2. 在选择器渲染点追加中文选项
-3. 装入官方词典（`catalogs/`）
-4. 关闭 Electron 的 asar 完整性校验 fuse（绕开 plist 指纹 + 框架摘要两层校验），随后 ad-hoc 重签名
+1. Append `zh-Hans` to both language lists in the app code (catalog index / picker list)
+2. Append the Chinese entry at the picker render point
+3. Install the official dictionary (`catalogs/`)
+4. Disable the Electron asar integrity fuse (bypassing the plist fingerprint + framework digest layers), then ad-hoc re-sign
 
-不替换任何界面字符串、不碰网络请求、不修改原 App。
+No UI strings are replaced, no network requests are touched, and the original app is never modified.
 
 ## ❓ FAQ
 
-| 问题 | 回答 |
+| Question | Answer |
 |---|---|
-| 打开后要求重新配置模型网关/登录？ | 副本换了签名读不了原 App 的钥匙串条目，重填一次即可 |
-| Claude 官方更新后中文没了？ | 更新会覆盖补丁，重跑一次 `bash patch.sh` |
-| 想回官方原版？ | 直接用回原 Claude App（从未被修改），或删除 Claude-CN |
-| 提示「已损坏，无法打开」？ | 重跑一次脚本（重新签名） |
-| 部分新界面还是英文？ | 词典为官方 2026-10 版，App 新版新增文案暂为英文 |
-| 官方全面推送中文后？ | 本项目使命完成，删副本用回原版即可 |
+| It asks me to reconfigure the model gateway / sign in | The copy has a different signature and cannot read the original app's keychain items — re-enter once and you're set |
+| Chinese disappeared after a Claude update | Updates overwrite the patch — re-run `bash patch.sh` |
+| How do I go back to the official app? | Just use the original Claude app (never modified), or delete Claude-CN |
+| "App is damaged and can't be opened" | Re-run the script (re-signs the copy) |
+| Some newer UI is still English | The dictionary is the official 2026-10 release; strings added in newer app versions fall back to English |
+| What happens when Anthropic ships Chinese officially? | This project retires — delete the copy and use the original |
 
-## 📜 词典来源与版权
+## 📜 Dictionary Provenance & Copyright
 
-`catalogs/` 下的两份词典提取自 Anthropic 官方 CDN 下发的 Claude 界面翻译文件，版权归 Anthropic 所有，此处收录仅用于本地界面互操作。**不适用本仓库的开源许可**。如官方提出请求，将从仓库移除（届时官方中文应已全面可用）。
+The two dictionaries under `catalogs/` are extracted from the official Claude UI translation files served by Anthropic's CDN. Copyright belongs to Anthropic. They are included solely for local UI interoperability and are **not covered by this repository's open-source license**. They will be removed upon request from the rights holder (by which point the official Chinese UI should be generally available).
 
-## 🤝 贡献
+## 🤝 Contributing
 
-App 大版本更新导致锚点漂移时，欢迎 PR：
+When a major Claude update shifts the patch anchors, PRs are welcome:
 
-1. 跑 `bash patch.sh`，收集输出里「锚点漂移」的步骤名
-2. 在新版 `ion-dist.asar` 里用对应功能关键词（如 `i18nReleased`、`data-i18n-catalogs`、语言选择器渲染函数）定位新锚点
-3. 修改 `patch.sh` 顶部 `PAIRS` 的锚点串，提交 PR 并附上新版验证截图
+1. Run `bash patch.sh` and collect the steps reported as "anchor drift"
+2. In the new `ion-dist.asar`, locate the new anchors using the relevant feature keywords (`i18nReleased`, `data-i18n-catalogs`, the language-picker render function)
+3. Update the anchor strings in `patch.sh` and submit a PR with a screenshot of the working result
 
-## ⚖️ 免责声明
+## ⚖️ Disclaimer
 
-仅供个人学习研究使用。Claude 为 Anthropic Inc. 的商标，本项目与其无关联。使用本补丁产生的一切后果由使用者自行承担。
+For personal study and research only. Claude is a trademark of Anthropic Inc.; this project is not affiliated with them. Use at your own risk.
 
-## 📝 更新日志
+## 📝 Changelog
 
-见 [CHANGELOG.md](CHANGELOG.md)。
+See [CHANGELOG.md](CHANGELOG.md).
